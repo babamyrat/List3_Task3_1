@@ -47,6 +47,7 @@ public class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleV
 
     @Override
     public int getItemCount() {
+        if (dataList == null) return 0;
         return dataList.size();
     }
 
@@ -63,5 +64,13 @@ public class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleV
 
 
         }
+    }
+
+    public void addData(List<ExampleModel> listModel) {
+        if (listModel != null)
+            dataList = listModel;
+        else
+            dataList.clear();
+        notifyDataSetChanged();
     }
 }
