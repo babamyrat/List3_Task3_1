@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.list3.R;
+import com.example.list3.db.User;
 import com.example.list3.model.ExampleModel;
 
 import java.util.List;
@@ -50,6 +51,7 @@ public class ExampleAdapter extends RecyclerView.Adapter<ExampleAdapter.ExampleV
         if (dataList == null) return 0;
         return dataList.size();
     }
+
 
     public class ExampleViewHolder extends RecyclerView.ViewHolder {
         TextView txtName, txtTextFull;
