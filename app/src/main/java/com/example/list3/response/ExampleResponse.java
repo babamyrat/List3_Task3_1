@@ -1,6 +1,5 @@
 package com.example.list3.response;
 
-import com.example.list3.adapter.ExampleAdapter;
 import com.example.list3.model.ExampleModel;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

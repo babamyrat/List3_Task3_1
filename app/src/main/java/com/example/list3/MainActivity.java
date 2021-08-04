@@ -1,75 +1,90 @@
 package com.example.list3;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.viewpager2.widget.ViewPager2;
 
-import android.app.ProgressDialog;
-import android.location.LocationManager;
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.Button;
 
+import com.example.list3.adapter.DadabaseAdapter;
 import com.example.list3.adapter.ExampleAdapter;
-import com.example.list3.api.ApiClient;
-import com.example.list3.api.ApiInterface;
+import com.example.list3.db.AppDatabase;
+import com.example.list3.db.User;
 import com.example.list3.model.ExampleModel;
-import com.example.list3.response.ExampleResponse;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
+import com.example.list3.viewmodel.ExampleViewModel;
 
-import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    ProgressDialog progressDialog;
+
     RecyclerView recyclerView;
+    List<ExampleModel> searchModelList = new ArrayList<>();
+    List<User> userList;
+    ExampleAdapter exampleAdapter;
+    DadabaseAdapter dadabaseAdapter;
+    ExampleViewModel searchViewModel;
+    Button addNewUserButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Loading....");
-        progressDialog.show();
-        serviceClient();
+        addNewUserButton = findViewById(R.id.addNewUserButton);
+        addNewUserButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(new Intent(MainActivity.this, NewAddDatabaseActivity.class), 100);
+            }
+        });
+
+
+        // Api url
+        recyclerView = findViewById(R.id.recyclerView);
+        RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 1);
+        recyclerView.setLayoutManager(mLayoutManager);
+
+
+        loadApi();
+
+        //loadDB();
+
+
     }
-    private void serviceClient() {
-        //Create handle for the RetrofitInstance interface
-        ApiInterface service = ApiClient.getRetrofitInstance().create(ApiInterface.class);
-        Call<ExampleResponse> call = service.getAllPhotos();
-        call.enqueue(new retrofit2.Callback<ExampleResponse>() {
 
-            @Override
-            public void onResponse(@NotNull Call<ExampleResponse> call, @NotNull Response<ExampleResponse> response) {     // Response
-                progressDialog.dismiss();   // progress
-                if (response.isSuccessful()){
-                    assert response.body() != null;
-                    generateDataList(response.body().getCategories());
-                }
-            }
-
-            @Override
-            public void onFailure(@NotNull Call<ExampleResponse> call, @NotNull Throwable t) {       // in not on uri
-                progressDialog.dismiss();
-                Toast.makeText(getApplicationContext(), "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
-            }
+    private void loadApi() {
+        exampleAdapter = new ExampleAdapter(searchModelList,this);
+        recyclerView.setAdapter(exampleAdapter);
+        searchViewModel = ViewModelProviders.of(this).get(ExampleViewModel.class);
+        searchViewModel.search();
+        searchViewModel.getSearchLiveData().observe(this, exampleResponse -> {
+            List<ExampleModel> models = exampleResponse.getCategories();
+            exampleAdapter.addData(models);
         });
     }
 
-    //Method to generate List of data using RecyclerView with custom adapter
-    private void generateDataList(List<ExampleModel> photoList) {
-        recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        ExampleAdapter adapter = new ExampleAdapter(photoList,this);
-        recyclerView.setAdapter(adapter);
+    private void loadDB() {
+        dadabaseAdapter = new DadabaseAdapter(userList, this);
+        recyclerView.setAdapter(dadabaseAdapter);
+        AppDatabase db = AppDatabase.getDbInstance(this.getApplicationContext());
+        List<User> userList = db.userDao().getAllUsers();
+        dadabaseAdapter.addDataDB(userList);
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == 100){
+            loadDB();
+        }
 
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
